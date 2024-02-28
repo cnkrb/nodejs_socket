@@ -239,7 +239,7 @@ const updateGoldInDatabase = (newGoldValue, userId, result) => {
 
 
 
-server.listen(0, () => {
+server.listen(1717, () => {
     console.log('80 portunu dinliyorum...')
 });
 
