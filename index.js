@@ -197,7 +197,6 @@ const updateGold = (userId, gold, messageSuccess, messageErrorGold, messageError
     });
 }
 
-// Kullanıcının mevcut altın miktarını alır
 const getGold = (userId, result) => {
     db(function (err, con) {
         if (err) {
@@ -219,7 +218,6 @@ const getGold = (userId, result) => {
     });
 }
 
-// Veritabanında kullanıcının altın miktarını günceller
 const updateGoldInDatabase = (newGoldValue, userId, result) => {
     db(function (err, con) {
         if (err) {
@@ -241,6 +239,7 @@ const updateGoldInDatabase = (newGoldValue, userId, result) => {
 
 server.listen(1717, () => {
     console.log('80 portunu dinliyorum...')
+
 });
 
 
