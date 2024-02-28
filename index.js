@@ -52,6 +52,14 @@ io.on('connection', async (socket) => {
             } else {
                 let gold = 0;
                 console.log(fortuneType)
+
+                io.to(userSocketToken).emit("fortuneUserStart", {
+                    isGold: true,
+                    roomId: roomId.toString(),
+                    userId: userId.toString(),
+                })
+                return;
+
                 if (fortuneType === "Kahve") {
                     gold = 5 ;
                 } else if (fortuneType === ("Tarot")) {
