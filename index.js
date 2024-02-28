@@ -52,15 +52,15 @@ io.on('connection', async (socket) => {
             } else {
                 let gold = 0;
                 console.log(fortuneType)
-                if (fortuneType.equals("Kahve")) {
+                if (fortuneType === "Kahve") {
                     gold = 5 ;
-                } else if (fortuneType.equals("Tarot")) {
+                } else if (fortuneType === ("Tarot")) {
                     gold = 10 ;
-                } else if (fortuneType.equals("Pandul")) {
+                } else if (fortuneType === ("Pandul")) {
                     gold = 15 ;
-                } else if (fortuneType.equals("İskambil")) {
+                } else if (fortuneType === ("İskambil")) {
                     gold = 20 ;
-                } else if (fortuneType.equals("Bakla")) {
+                } else if (fortuneType === ("Bakla")) {
                     gold = 25 ;
                 }
                 await updateGold(userId,  gold, "test", "tes", (err, updateResult) => {
