@@ -51,6 +51,7 @@ io.on('connection', async (socket) => {
             if (err) {
             } else {
                 let gold = 0;
+                console.log(fortuneType)
                 if (fortuneType.equals("Kahve")) {
                     gold = 5 ;
                 } else if (fortuneType.equals("Tarot")) {
