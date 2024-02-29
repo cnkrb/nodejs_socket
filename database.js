@@ -1,10 +1,10 @@
 const mysql = require("mysql2")
 
 const pool = mysql.createPool({
-    host: '31.192.212.112',
-    user: 'cenkkar1_fal',
-    password: 'M=IM.Kv@z()]',
-    database: 'cenkkar1_fal',
+    host: '89.252.183.243',
+    user: 'cnkrbcom_fal_baktir',
+    password: 's+NlEiDAISzF',
+    database: 'cnkrbcom_fal_baktir',
 });
 
 const getConnection = function (callback) {
