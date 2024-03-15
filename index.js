@@ -47,19 +47,11 @@ io.on('connection', async (socket) => {
     });
 
     socket.on("fortuneStart", async function (selectUserId,userId,roomId,fortuneType) {
+        console.log(selectUserId,userId)
         await getSocketToken(selectUserId, async (err, userSocketToken) => {
             if (err) {
             } else {
                 let gold = 0;
-                console.log(fortuneType)
-
-                io.to(userSocketToken).emit("fortuneUserStart", {
-                    isGold: true,
-                    roomId: roomId.toString(),
-                    userId: userId.toString(),
-                })
-                return;
-
                 if (fortuneType === "Kahve") {
                     gold = 5 ;
                 } else if (fortuneType === ("Tarot")) {
@@ -71,7 +63,7 @@ io.on('connection', async (socket) => {
                 } else if (fortuneType === ("Bakla")) {
                     gold = 25 ;
                 }
-                await updateGold(userId,  gold, "test", "tes", (err, updateResult) => {
+                await updateGold(selectUserId,  gold, userSocketToken, (err, updateResult) => {
                     if (err) {
                         io.to(userSocketToken).emit("fortuneUserStart", {
                             isGold: false,
@@ -163,45 +155,50 @@ const getUsersWithSocketIdAndStatus = (result) => {
 }
 
 // Veritabanından kullanıcının altın miktarını alır ve gerekli işlemleri gerçekleştirir
-const updateGold = (userId, gold, messageSuccess, messageErrorGold, messageErrorNotGold, result) => {
-    // Kullanıcının mevcut altın miktarını al
+const updateGold = (userId, gold, userSocketToken, result) => {
     getGold(userId, (err, currentGold) => {
         if (err) {
             result(err, null);
             return;
         }
-
-
-        if (currentGold !== false) {
+        if (currentGold !== 0) {
             if (currentGold >= gold) {
-                // Yeni altın miktarını hesapla
                 const newGoldValue = currentGold - gold;
-
-                // Altını güncelle
                 updateGoldInDatabase(newGoldValue, userId, (err, updateGoldResult) => {
                     if (err) {
+                        console.log('girdi2')
                         result(err, null);
                         return;
                     }
-
                     if (updateGoldResult !== false) {
+                        console.log('girdi3')
                         result(null, {
                             result: true,
-                            message: messageSuccess
+                            message: ""
                         });
                     } else {
-                        result(null, {
-                            result: false,
-                            message: messageErrorGold
-                        });
+                        console.log('girdi4')
+                        io.to(userSocketToken).emit("fortuneUserStart", {
+                            isGold: false,
+                            roomId: "roomId.toString()",
+                            userId: "userId.toString()",
+                        })
                     }
                 });
             } else {
-                result(null, {
-                    result: false,
-                    message: messageErrorNotGold
-                });
+                console.log('girdi5')
+                io.to(userSocketToken).emit("fortuneUserStart", {
+                    isGold: false,
+                    roomId: "roomId.toString()",
+                    userId: "userId.toString()",
+                })
             }
+        } else {
+            io.to(userSocketToken).emit("fortuneUserStart", {
+                isGold: false,
+                roomId: "roomId.toString()",
+                userId: "userId.toString()",
+            })
         }
     });
 }
