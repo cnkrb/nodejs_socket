@@ -31,8 +31,16 @@ class Tail {
     addTail(socketId) {
         this.tails.push(socketId);
     }
+
     removeTail(socketId) {
         this.tails = this.tails.filter(id => id !== socketId);
+    }
+}
+
+
+class TailModel {
+    constructor(userId) {
+        this.userId = userId;
     }
 }
 
@@ -65,6 +73,45 @@ io.on('connection', async (socket) => {
                         })
                     }
                 });
+            }
+        });
+    });
+    socket.on("getUserCallList", async function (fortuneId) {
+        const index = tails.findIndex(tail => tail.fortuneId === fortuneId);
+        await getSocketTokenWithFortuneTeller(fortuneId,async (err, fortuneToken) => {
+            if (err) {} else {
+                if (index !== -1) {
+                    const tailsModel = [];
+
+                    if (tails[index].tails.length > 0) {
+                        for (let i = 0; i < tails[index].tails.length; i++) {
+                            const item = tails[index].tails[i];
+                            // getIdWithSocketToken fonksiyonunu beklerken, döngüyü durdurmak için await kullanılır.
+                            const userId = await new Promise((resolve, reject) => {
+                                getIdWithSocketToken(item, (err, userId) => {
+                                    if (err) {
+                                        reject(err);
+                                    } else {
+                                        resolve(userId);
+                                    }
+                                });
+                            });
+
+                            tailsModel.push(new TailModel(userId.toString()));
+                        }
+                    }
+
+// Döngü tamamlandıktan sonra emit işlemi gerçekleştirilir.
+                    io.to(fortuneToken).emit("userCallList", {
+                        usersCount: tailsModel.length > 0,
+                        users: tailsModel
+                    });
+
+                } else {
+                    io.to(fortuneToken).emit("userCallList", {
+                        usersCount: false
+                    })
+                }
             }
         });
     });
@@ -157,6 +204,9 @@ io.on('connection', async (socket) => {
                     } else {
                         const index = tails.findIndex(tail => tail.fortuneId === fortuneId);
                         if (index === -1) {
+
+
+
                             tails.push(new Tail(
                                 fortuneId
                             ))
@@ -249,11 +299,47 @@ io.on('connection', async (socket) => {
                         if (err) {
                         } else {
                             const index = tails.findIndex(tail => tail.fortuneId === fortuneId);
-                            tails[index].removeTail(userSocketToken)
+                            if (index !== -1) {
+                                tails[index].removeTail(userSocketToken)
+                            }
                             io.to(userSocketToken).emit("fortuneClose", {})
                             io.to(searchRoom).emit("refresh", {});
                         }
                     });
+                });
+            }
+        });
+    });
+
+    socket.on("takeTimeRequest", async function (fortuneId,channelName) {
+        await getSocketTokenWithChannelName(channelName, async (err, userId) => {
+            if (err) {
+            } else {
+                await getSocketToken(userId, async (err, userSocketToken) => {
+                    if (err) {
+                    } else {
+                        io.to(userSocketToken).emit("takeTimeResponse", {
+                            isGold: true,
+                        })
+
+                    }
+                });
+            }
+        });
+    });
+
+    socket.on("answerTakeTime", async function (userId,channelName,isAnswer) {
+        await getFortuneIdWithChannelName(channelName, async (err, fortuneId) => {
+            if (err) {
+            } else {
+                await getSocketTokenWithFortuneTeller(fortuneId, async (err, userSocketToken) => {
+                    console.log(userSocketToken)
+                    if (err) {
+                    } else {
+                        io.to(userSocketToken).emit("answerTakeTimeResult", {
+                            isAnswer: isAnswer,
+                        })
+                    }
                 });
             }
         });
@@ -342,6 +428,28 @@ const getSocketToken = (userId, result) => {
     });
 }
 
+
+const getIdWithSocketToken = (socketId, result) => {
+    db(function (err, con) {
+        if (err) {
+            result(err, null);
+            return;
+        }
+        con.query("SELECT * FROM user WHERE socketId =  ?", [socketId], (err, results) => {
+            con.release();
+            if (err) {
+                result(err, null);
+            } else {
+                if (results.length > 0) {
+                    result(null, results[0].id);
+                } else {
+                    result("Kullanıcı bulunamadı", null);
+                }
+            }
+        });
+    });
+}
+
 const getSocketTokenWithChannelName = (userId, result) => {
     db(function (err, con) {
         if (err) {
@@ -355,6 +463,27 @@ const getSocketTokenWithChannelName = (userId, result) => {
             } else {
                 if (results.length > 0) {
                     result(null, results[0].userId);
+                } else {
+                    result("Kullanıcı bulunamadı", null);
+                }
+            }
+        });
+    });
+}
+
+const getFortuneIdWithChannelName = (userId, result) => {
+    db(function (err, con) {
+        if (err) {
+            result(err, null);
+            return;
+        }
+        con.query("SELECT * FROM history WHERE roomId =  ?", [userId], (err, results) => {
+            con.release();
+            if (err) {
+                result(err, null);
+            } else {
+                if (results.length > 0) {
+                    result(null, results[0].fortuneId);
                 } else {
                     result("Kullanıcı bulunamadı", null);
                 }
